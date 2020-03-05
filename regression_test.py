@@ -5,15 +5,35 @@ from calculations import mean_square_error
 
 if __name__ == "__main__":
     # Read in synthetic data for regressions
-    synth1 = np.genfromtxt("./data/synthetic-1.csv", delimiter=",")
-    synth2 = np.genfromtxt("./data/synthetic-2.csv", delimiter=",")
-    synth3 = np.genfromtxt("./data/synthetic-3.csv", delimiter=",")
+    synth_data = []
+    for i in range(1, 4):
+        synth_data.append(np.genfromtxt("./data/synthetic-{}.csv".format(i), delimiter=","))
 
-    predictor = RegressionPredictor(1*10**-6)
+    fig = plt.subplot(2,2,1)
 
-    predictor.fit(synth1, 2, error_bound=0.001, timeout=120)
-    results = list(map(predictor.predict, synth1[:, 0]))
-    results = np.array(results)
+    data_index = 1
+    for data in synth_data:
+        plt.subplot(2, 2, data_index)
+        plt.title("synthetic-{} Data and Regression Lines".format(data_index))
+        plt.xlabel("x")
+        plt.ylabel("y")
+        plt.plot(data[:, 0], data[:, 1], 'go')
+        for order in [1, 2, 4, 7]:
+            # Train regression predictor and measure error
+            predictor = RegressionPredictor(1*10**-3, 1000)
+            predictor.fit(data, order, min_iterations=1000, error_bound=0.0001, timeout=3*60)
+            results = list(map(predictor.predict, data[:, 0]))
+            results = np.array(results)
+            print("synthetic-{} data, order={}:".format(data_index, order))
+            print(predictor.predict_func())
+            print(mean_square_error(data[:, 1], results))
+            print("")
 
-    print(predictor.predict_func())
-    print(mean_square_error(synth1[:, 1], results))
+            # Plot points and line
+            line_points = np.linspace(data[:, 0].min(), data[:, 0].max(), 1000)
+            line = list(map(predictor.predict, line_points))
+            line = np.array(line)
+            plt.plot(line_points, line, '-', label="{}".format(order))
+        data_index = data_index + 1
+        plt.legend(title="Order")
+    plt.show()
