@@ -22,7 +22,7 @@ if __name__ == "__main__":
         for order in [1, 2, 4, 7]:
             # Train regression predictor and measure error
             predictor = RegressionPredictor(1*10**-3, 1000)
-            predictor.fit(data, order, min_iterations=1000, error_bound=0.0001, timeout=3*60)
+            predictor.fit(data, order, min_iterations=1000, change_bound=0.0001, timeout=3*60)
             results = list(map(predictor.predict, data[:, 0]))
             results = np.array(results)
             print("synthetic-{} data, order={}:".format(data_index, order))
@@ -52,7 +52,7 @@ if __name__ == "__main__":
         for order in [1, 2, 4, 7]:
             # Train regression predictor and measure error
             predictor = InterpolatingRegressionPredictor(1*10**-3, 1000)
-            predictor.fit(data, order, min_iterations=1000, error_bound=0.0001, timeout=3*60)
+            predictor.fit(data, order, min_iterations=1000, change_bound=0.0001, timeout=3*60)
             results = list(map(predictor.predict, data[:, 0]))
             results = np.array(results)
             print("synthetic-{} data, order={}:".format(data_index, order))

@@ -11,11 +11,9 @@ class RegressionPredictor:
         self.learning_rate = learning_rate
         self.T = T
 
-    def fit(self, train_data, order, min_iterations=float("inf"), error_bound=0.01, timeout=60):
+    def fit(self, train_data, order, min_iterations=float("inf"), change_bound=0.01, timeout=60):
         # Create random initial paramters for polyonomial of provided order
         # Random values range based on min/max of y values
-        self.x_max = train_data[:, 0].max()
-        self.x_min = train_data[:, 0].min()
         self.y_max = train_data[:, 1].max()
         self.y_min = train_data[:, 1].min()
         guess_max = self.y_max
@@ -27,8 +25,6 @@ class RegressionPredictor:
         self.order = order
 
         # Normalize data
-        #x = (train_data[:, 0] - train_data[:, 0].min()) / (train_data[:, 0].max() - train_data[:, 0].min())
-        #y = (train_data[:, 1] - train_data[:, 1].min()) / (train_data[:, 1].max() - train_data[:, 1].min())
         x = train_data[:, 0]
         y = train_data[:, 1]
 
@@ -37,7 +33,7 @@ class RegressionPredictor:
         old_thetas = np.array(self.thetas) * 2
         iterations = 0
         self.lambdify_expression()
-        while abs(max(self.thetas - old_thetas)) > error_bound or iterations < min_iterations:
+        while abs(max(self.thetas - old_thetas)) > change_bound or iterations < min_iterations:
             old_thetas = np.array(self.thetas)
             results = self.numeric_func(x)
             self.update_weights(results, y, x)
@@ -76,7 +72,7 @@ class RegressionPredictor:
 
 
 class InterpolatingRegressionPredictor(RegressionPredictor):
-    def fit(self, train_data, order, min_iterations=float("inf"), error_bound=0.01, timeout=60):
+    def fit(self, train_data, order, min_iterations=float("inf"), change_bound=0.01, timeout=60):
         # build symbolic expression to evaluate polynomial expression
         self.expr = parse_expr("+".join("N_{}*x**{}".format(i, i) for i in range(order+1)))
         self.order = order
@@ -93,7 +89,7 @@ class InterpolatingRegressionPredictor(RegressionPredictor):
         old_thetas = np.array(self.thetas) * 2
         iterations = 0
         self.lambdify_expression()
-        while abs(max(self.thetas - old_thetas)) > error_bound or iterations < min_iterations:
+        while abs(max(self.thetas - old_thetas)) > change_bound or iterations < min_iterations:
             old_thetas = np.array(self.thetas)
             results = self.numeric_func(x)
             self.update_weights(results, y, x)
@@ -111,7 +107,7 @@ class InterpolatingRegressionPredictor(RegressionPredictor):
         num_points = self.order + 1
 
         # Sort data by x value and pick enough points
-        # to uniquely interpolate data, picking evenly spaced points
+        # to uniquely interpolate data, picking linearly spaced points
         data = np.sort(data, axis=0)
         selected_idx = np.round(np.linspace(0, len(data)-1, num_points)).astype(int)
         selected_points = data[selected_idx]
